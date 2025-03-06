@@ -25,7 +25,12 @@ from new_drug_strings_parsing import extract_drug_name_direction
 ###################################
 # genric utilities
 
-from generic_util import printlist, printmap
+from generic_util import printlist, printmap, domain_restriction
+
+##################################
+# loaign name filterinf routines
+
+from random_drug_scoring_model import filterbyfdaapproveddrugs
 
 #   newrecord = (module_id, res[0], res[1], module_size, disease_up, disease_down, drug_deg_in_module, drug_deg_hits)
 
@@ -145,13 +150,23 @@ def direction_analysis(directory, filename, separator, drugdatatype, positiveonl
 
     drugscore_items = drugscore.items()
     drugscore_items_sorted = sorted(drugscore_items, key=lambda tup: tup[1], reverse=True)
-    printlist(drugscore_items_sorted, 'drugscore_items_sorted')
+    printlist(drugscore_items_sorted, 'drugscore_items_sorted', 20)
 
 # fda filter
+    if fdaonly == True :
+        list_of_drug_names = [x for x in drugscore.keys()]
+        fda_filtered_list_of_drug_names = filterbyfdaapproveddrugs(list_of_drug_names, drugdatatype)
+        drugscore_fda_filtered = domain_restriction(fda_filtered_list_of_drug_names, drugscore)
+        drugscore_items = drugscore_fda_filtered.items()
+        drugscore_items_sorted = sorted(drugscore_items, key=lambda tup: tup[1], reverse=True)
+        printlist(drugscore_items_sorted, 'drugscore_items_sorted after fda filtering', 20)
 
+# positivity filter
 
-# 
-
+    if  positiveonly == True :
+        drugscore_items_sorted_tmp = [x for x in drugscore_items_sorted if x[1] >= 0.0 ]
+        drugscore_items_sorted = drugscore_items_sorted_tmp
+        printlist(drugscore_items_sorted, 'drugscore_items_sorted after positivity filtering', 20)
 
 
     return drugscore_items_sorted
@@ -250,20 +265,23 @@ if __name__ == "__main__":
 
     separator = ','
     counter = 1
-    counter_test_limit = 16
+    counter_test_limit = 8
     
     #    patient_list = ['pilot', ]
-    patient_list = ['TCGA-AZ-6600', ]
+#    patient_list = ['TCGA-AZ-6600', ]
+    patient_list = ['TCGA-HC-7742']
+    alg_list = ['cpd07j08', 'MD' ]
+
 
     for conf in modulation_data.keys() :
-        if conf[0] in patient_list  :
+        if conf[0] in patient_list and  conf[1] in alg_list :
             print('--------------------------- Begin --------------------------------')
             print(conf, modulation_data[conf])
             directory = modulation_data[conf][0]
             filename = modulation_data[conf][1]
             drug_format = conf[2]
-            positiveonly = True #per ora non usato
-            fdaonly = True  #per ora non usato
+            positiveonly = True #per ora  usato
+            fdaonly = True  #per ora  usato
     #        weights = "deltadeg"
             weights = "size_x_deltadeg"
             

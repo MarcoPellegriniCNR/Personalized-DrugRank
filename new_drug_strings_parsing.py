@@ -30,6 +30,10 @@ from generic_util import printmap, printlist, increment_count
 # Routine to extract drug name and drug action direction
 
 
+############################################
+# checking druglsits names
+
+from random_drug_scoring_model import filter_two_lists
     
 def extract_drug_name_direction(s, drugdatatype) :
 
@@ -127,6 +131,12 @@ def extract_drug_name_direction(s, drugdatatype) :
         assert False
 
 
+############################################################
+#
+# a function to cehck the presence of a given drug in an input file taking alises into consideration
+#
+
+
 
 
 #####################################################
@@ -137,15 +147,32 @@ if __name__ == "__main__":
 #    pass
     print('Testing drug string parsing routines')
     separator = ','
-    counter = 0
+    counter = 1
     counter_test_limit = 16
 
-    #    patient_list = ['pilot', ]
-    patient_list = ['TCGA-AZ-6600', ]
+#    patient_list = ['pilot', ]
+#    patient_list = ['TCGA-AZ-6600', ]
+    patient_list = ['TCGA-HC-7742']
+    alg_list = ['cpd07j08', 'MD' ]
 
+##    drugs_to_check = [  'Fluorouracil',
+##                        'Leucovorin',
+##                        'Oxaliplatin',
+##                        'Bevacizumab',
+##                        'Capecitabine',
+##                        'Irinotecan',
+##                        'Cetuximab',
+##                        'Pegfilgrastim',
+##                        'Mitomycin',]
+##    
+##    drugs_to_check_lable = 'crc_most_used_drugs'
+
+    drugs_to_check = ['Leuprolide', 'Leuprorelin', 'Lupron', 'Eligard', 'Fensolvi', 'Viadur', 'Lupaneta' ]
+    drugs_to_check_lable = 'prc_drug_used_for_TCGA-HC-7742'
+    
 
     for conf in modulation_data.keys() :
-        if conf[0] in patient_list  :
+        if conf[0] in patient_list and  conf[1] in alg_list :
             print('--------------------------- Begin --------------------------------')
             print(conf, modulation_data[conf])
             directory = modulation_data[conf][0]
@@ -163,9 +190,11 @@ if __name__ == "__main__":
     #          print(result)
               increment_count(unique_drugs, result[0], 1)
               increment_count(unique_direction, result[1], 1)
-              
+
+            drug_names_in_matrix = [y for y in  unique_drugs.keys()] 
             printmap(unique_drugs, 'unique_drugs')
             printmap(unique_direction, 'unique_direction')
+            filter_two_lists(drugs_to_check_lable, drugs_to_check, drug_format, drug_names_in_matrix )
             print('--------------------------- End --------------------------------')
             if counter > counter_test_limit :
                 break

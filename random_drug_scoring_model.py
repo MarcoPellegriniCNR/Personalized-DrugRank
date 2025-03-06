@@ -701,13 +701,13 @@ def filterbycovid19clinicaltrial(inlist, conf):
 ##    return out
 
 # new version
-def filterbyfdaapproveddrugs(inlist, conf2):  # confiuration of the type (algindex, gedatastring, drugstring) for command_1
+def filterbyfdaapproveddrugs(inlist, drugstring):  # confiuration of the type (algindex, gedatastring, drugstring) for command_1
 
     print ("Begin filterbyfdaapproveddrugs")
-    if len(conf2) == 3 :
-        drugstring = conf2[2]
-    else :
-        drugstring = conf2[2]
+##    if len(conf2) == 3 :
+##        drugstring = conf2[2]
+##    else :
+##        drugstring = conf2[2]
 
     drugs = dict([(drugstring, inlist),])
     standards = dict([('fda', fda2),])
@@ -716,9 +716,32 @@ def filterbyfdaapproveddrugs(inlist, conf2):  # confiuration of the type (algind
 
 
     out = filteredlistsmapping[(drugstring,'fda')]
-    printmap( resultsmapping, "Drug filtered by including only  drugs in rheumatoid arthritis practice")
-    printlist( out , 'matched list of drugs arth  and ath_ge')
+    printmap( resultsmapping, "Drug filtered by including only  drugs fda approved")
+    printlist( out , 'matched list of drugs fda approved')
     print ("End filterbyfdaapproveddrugs ")
     return out
 
 ############################################################
+
+###
+# a function to match a generic list of drugs into another generic list of drugs. 
+
+def filter_two_lists(list_name_1, list1, list_name_2, list2) :
+
+    list1n = [ stringnormalize2(y).lower() for y in list1]
+    list2n = [ stringnormalize2(y).lower() for y in list2]
+    drugs1d = dict([(list_name_1, list1n),])
+    drugs2d = dict([(list_name_2, list2n),])
+    (resultsmapping , filteredlistsmapping) = findintersections(drugs1d, drugs2d, name_to_D, D_to_names)
+    out = filteredlistsmapping[(list_name_1,list_name_2)]
+    printlist( out , 'matched list of drugs btw: {}, {}'.format(list_name_1, list_name_2 ))
+
+
+##
+
+if __name__ == "__main__":
+#    pass
+#   testing         
+    filter_two_lists('l1', ['Irinotecan', 'Fluorouracil', 'Leucovorin', 'pippo'	], 'l2', fda2)
+
+    

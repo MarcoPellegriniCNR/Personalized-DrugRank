@@ -864,10 +864,11 @@ def dump_findmatchingsecondlist(dumpdirectory, dumpfile, mapping):
 # given two lsits reports closest match in the second list for all items in the first list
 
 #def findmatchingsecondlist(firstlist , secondlist, dumpdirectory, dumpfile):
-def findmatchingsecondlist(firstlist , secondlist, drugdumps):
-    
-    print ("Size first list : " , len(firstlist))
-    print ("Size second list : " , len(secondlist))
+def findmatchingsecondlist(firstlist , secondlist, drugdumps, verbose='noverbose'):
+
+    if verbose == "verbose" :    
+        print ("Size first list : " , len(firstlist))
+        print ("Size second list : " , len(secondlist))
 
 # file upload moved out of this call 
 ##    if testexistencedirectory(dumpdirectory) == False :
@@ -898,9 +899,10 @@ def findmatchingsecondlist(firstlist , secondlist, drugdumps):
                     drug_ct[keynorm] = res[0]
                     print (res[1])
                     if (keynorm, res[0][1]) in certifiedlist  or suffixsplit(keynorm, res[0][1]) or  keynorm == res[0][1] :
-                        print ("Certified pair ", (keynorm, res[0][1]))
+                        if verbose=='verbose' :
+                            print ("Certified pair ", (keynorm, res[0][1]))
                     else :
-                        print ("@@@ Drug Lacking certigication or exception", (keynorm, res[0][1]))
+                        print ("@@@ Drug Lacking certification or exception", (keynorm, res[0][1]))
 
                     continue
                 else :
@@ -924,7 +926,8 @@ def findmatchingsecondlist(firstlist , secondlist, drugdumps):
             if suffixsplit(keynorm, drugnorm):
                 drug_ct[keynorm] = (1.0, drugnorm)
                 printstr = "Suffix-based-exact-matching" +  ' '+ str((key,drug))+ ' ' + str((keynorm, drugnorm))
-                print (printst)
+                if verbose=='verbose' :
+                    print (printstr)
                 drugdumps[keynorm] = ((1.0, drugnorm), printstr )
                 updated = True
                 break
@@ -1047,4 +1050,4 @@ arthritis2 = [stringnormalize2(s.lower()) for s in arthritis1]
 ##
 
 
-    
+

@@ -122,10 +122,12 @@ if __name__ == "__main__":
     counter_test_limit = 16
     
 #    patient_list = ['pilot', ]
-    patient_list = ['TCGA-AZ-6600', ]
+#    patient_list = ['TCGA-AZ-6600', ]
+    patient_list = ['TCGA-HC-7742']
+    alg_list = ['cpd07j08', 'MD' ]
     
     for conf in modulation_data.keys() :
-        if conf[0] in patient_list  :
+        if conf[0] in patient_list and  conf[1] in alg_list :
             print('--------------------------- Begin --------------------------------')
             print(conf, modulation_data[conf])
             directory = modulation_data[conf][0]
