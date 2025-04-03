@@ -717,7 +717,7 @@ def filterbyfdaapproveddrugs(inlist, drugstring):  # confiuration of the type (a
 
     out = filteredlistsmapping[(drugstring,'fda')]
     printmap( resultsmapping, "Drug filtered by including only  drugs fda approved")
-    printlist( out , 'matched list of drugs fda approved')
+    printlist( out , 'matched list of drugs fda approved', 20)
     print ("End filterbyfdaapproveddrugs ")
     return out
 
@@ -735,7 +735,7 @@ def filter_two_lists(list_name_1, list1, list_name_2, list2) :
     (resultsmapping , filteredlistsmapping) = findintersections(drugs1d, drugs2d, name_to_D, D_to_names)
     out = filteredlistsmapping[(list_name_1,list_name_2)]
     printlist( out , 'matched list of drugs btw: {}, {}'.format(list_name_1, list_name_2 ))
-
+    return out
 
 ##
 

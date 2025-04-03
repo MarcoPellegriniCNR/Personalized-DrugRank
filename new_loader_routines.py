@@ -54,7 +54,7 @@ def load_data (directory, filename, separator) :
     print( "Opening", directory, filename)
 
     if not existsdir or not existsfile :
-        return []
+        return [], []
 
     
 
@@ -92,7 +92,7 @@ def load_data (directory, filename, separator) :
             assert len(newrecord) == numfields
             recovered += 1
             if testprintnumber < 10 :
-                print ("sample ", testprintnumber, newrecord)
+#                print ("sample ", testprintnumber, newrecord)
                 testprintnumber += 1
             record1 = [x.strip('\n').strip('"') for x in newrecord ]
             accumulator.append(record1)
@@ -109,6 +109,133 @@ def load_data (directory, filename, separator) :
     return accumulator, clean_header
 
 
+################################
+# counting NA fileds in pvalue and adjusted pvalue
+
+def counting_NA_values(conf, result_accumulator, header) :
+
+    pval_index = header.index('p_value')
+    apval_index  = header.index('adjusted_pvalue')
+
+    total = len(result_accumulator)
+    pval_na_counter = 0
+    apval_na_counter= 0
+    for x in  result_accumulator :
+        if x[pval_index] == 'NA' :
+            pval_na_counter += 1
+        if x[apval_index] == 'NA' :
+            apval_na_counter += 1
+
+    print ('@@ For conf {} over {} lines , pval NA {}, adj pval NA {},  differences {} {}'.format(conf, total, pval_na_counter, apval_na_counter,  total - pval_na_counter,  total -  apval_na_counter))
+        
+            
+
+def compare_two_listing(string1, listing1, string2, listing2) :
+
+    headers =     [
+                        'modules', 
+                        'drugs', 
+                        'module_size', 
+                        'DEG_up', 
+                        'DEG_down', 
+                        'drug_module_genes', 
+                        'DE_up_drug', 
+                        'DE_down_drug', 
+                        'p_value', 
+                        'adjusted_pvalue']
+
+    
+
+    l1 = len(listing1)
+    l2 = len(listing2)
+    if  l1  != l2 :
+        print('Different lengths', l1,  l2)
+        return None
+    counter = {}
+    for field in headers :
+        counter[field] = 0
+
+    for field in headers :
+        index = headers.index(field)
+        for x in range(l1) :
+            if listing1[x][index] ==  listing2[x][index] :
+                counter[field]  +=1
+
+    for field in headers :            
+        print ("For {},{} for field {},  equal slots {} different slots {}".format(string1, string2, field, counter[field] , l1- counter[field] ))
+        
+    return None
+
+
+
+
+###################
+def testing_identity_of_fields(pat1):
+    
+    separator = ','
+
+    patient_list = ['TCGA-AZ-6600',  'TCGA-A6-5667', 'TCGA-AZ-6605', 'TCGA-AA-3517',   'TCGA-A6-2671', 'pilot' ]
+
+    
+#    pat1 = 'TCGA-A6-2671'
+    alg = 'MD'
+#    alg = 'cpd07j08'
+
+    drug_data = 'CMAP'
+    
+    conf1 = (pat1, alg , drug_data, 'nofilter', 'crc')
+    index1 = patient_list.index(pat1)
+
+    directory1 = modulation_data[conf1][0]
+    filename1 = modulation_data[conf1][1]
+    result_accumulator1, header1  = load_data (directory1, filename1, separator)
+
+
+    for  x in patient_list :
+        index2  = patient_list.index(x) 
+        if index2 > index1  :                
+            conf2 = (x, alg , drug_data, 'nofilter', 'crc') 
+            directory2 = modulation_data[conf2][0]
+            filename2 = modulation_data[conf2][1]
+            result_accumulator2, header2  = load_data (directory2, filename2, separator)    
+            compare_two_listing(str(conf1), result_accumulator1, str(conf2), result_accumulator2)
+        
+
+##################
+
+def testing_access_to_all_files():
+    
+    separator = ','
+    counter = 1
+    counter_test_limit = 48
+    
+#    patient_list = ['pilot', ]
+#    patient_list = ['TCGA-AZ-6600', ]
+#    patient_list = ['TCGA-HC-7742']
+#    patient_list = ['TCGA-A6-2671']
+#    patient_list = ['TCGA-AA-3517']
+#    patient_list = ['TCGA-AZ-6605',]
+#    patient_list = ['TCGA-A6-5667',]
+
+    patient_list = ['TCGA-AZ-6600',  'TCGA-A6-5667', 'TCGA-AZ-6605', 'TCGA-AA-3517',   'TCGA-A6-2671', 'pilot' ]
+    
+    alg_list = ['cpd07j08', 'MD' ]
+    
+    for conf in modulation_data.keys() :
+        if conf[0] in patient_list and  conf[1] in alg_list  and conf[3] == 'filter' :
+            print('--------------------------- Begin --------------------------------')
+            print(conf, modulation_data[conf])
+            directory = modulation_data[conf][0]
+            filename = modulation_data[conf][1]
+            counter +=1
+            result_accumulator, header  = load_data (directory, filename, separator)
+            counting_NA_values(conf, result_accumulator, header)
+            print('--------------------------- End --------------------------------')
+            if counter > counter_test_limit :
+                break
+
+
+
 #####################################################
 # tesing the loader routines
 
@@ -116,27 +243,15 @@ def load_data (directory, filename, separator) :
 
 if __name__ == "__main__":
 #    pass
-    print('Testing access to all files')
-    separator = ','
-    counter = 1
-    counter_test_limit = 16
+#    print('Testing access to all files')
+#    testing_access_to_all_files()
+    print('Testing identity of fields in pairs of files')
+    patient_list = ['TCGA-AZ-6600',  'TCGA-A6-5667', 'TCGA-AZ-6605', 'TCGA-AA-3517',   'TCGA-A6-2671', 'pilot' ]
+    for pat in patient_list :
+        testing_identity_of_fields(pat)
     
-#    patient_list = ['pilot', ]
-#    patient_list = ['TCGA-AZ-6600', ]
-    patient_list = ['TCGA-HC-7742']
-    alg_list = ['cpd07j08', 'MD' ]
     
-    for conf in modulation_data.keys() :
-        if conf[0] in patient_list and  conf[1] in alg_list :
-            print('--------------------------- Begin --------------------------------')
-            print(conf, modulation_data[conf])
-            directory = modulation_data[conf][0]
-            filename = modulation_data[conf][1]
-            counter +=1
-            result_accumulator, _ = load_data (directory, filename, separator)
-            print('--------------------------- End --------------------------------')
-            if counter > counter_test_limit :
-                break
+    
 
     
 

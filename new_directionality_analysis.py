@@ -25,10 +25,10 @@ from new_drug_strings_parsing import extract_drug_name_direction
 ###################################
 # genric utilities
 
-from generic_util import printlist, printmap, domain_restriction
+from generic_util import printlist, printmap, domain_restriction, minuslog10, signedlog10
 
 ##################################
-# loaign name filterinf routines
+# loaign name filtering routines
 
 from random_drug_scoring_model import filterbyfdaapproveddrugs
 
@@ -43,6 +43,7 @@ record_field_map = {
     'DEG_down' : 5,
     'drug_module_genes' : 6,
     'drug_deg_hits' : 7,
+    'p_val_enrichr' : 8,
     }
 
 #######################
@@ -54,9 +55,9 @@ record_field_map = {
 # drugdatatyep in: GEO, DM, CMAP and L1000
 # weights in : "size_x_deltadeg", "deltadeg"
 
-def direction_analysis(directory, filename, separator, drugdatatype, positiveonly, fdaonly ,weights):
+def direction_analysis(directory, filename, separator, drugdatatype, positiveonly, fdaonly ,pvalue_filter,p_value_limit , weights):
 
-    assert weights in ["size_x_deltadeg", "deltadeg"]
+    assert weights in ["size_x_deltadeg", "deltadeg", "pval_x_deltadeg", "pval_x_log_deltadeg", 'pval_x_drug_hits', 'pval_x_deltadeg_x_drug_hits']
     assert drugdatatype in ['GEO', 'DM', 'CMAP', 'L1000']
 #    assert not filename.endswith('noFiltering.csv') #code is only for the format at 9 fields in the filtered data 
         
@@ -70,8 +71,12 @@ def direction_analysis(directory, filename, separator, drugdatatype, positiveonl
 # p-value filter
 
 #    pval_filtered_dataarray = [x for x in dataarray if test_pval(x[7], 0.05)] # use the raw pval not the adjusted one
-    pval_filtered_dataarray = [x for x in dataarray if test_pval(x[clean_header_map['p_value']], 0.05)] # use the raw p_value not the adjusted one 
-    print ("Number of records after pval filtering ", len(pval_filtered_dataarray))
+    if pvalue_filter :
+        pval_filtered_dataarray = [x for x in dataarray if test_pval(x[clean_header_map['p_value']], p_value_limit)] # use the raw p_value not the adjusted one 
+        print ("Number of records after p_value filtering ", len(pval_filtered_dataarray))
+    else:
+       pval_filtered_dataarray =   dataarray
+       print('No p_value filtering')
 
 
 # remapping tupels after extraction of drung names and direction
@@ -98,17 +103,25 @@ def direction_analysis(directory, filename, separator, drugdatatype, positiveonl
         disease_up = int(x[clean_header_map['DEG_up']])
         disease_down = int(x[clean_header_map['DEG_down']])
         drug_deg_in_module = int(x[clean_header_map['drug_module_genes']])
+        p_val_enrichr = float(x[clean_header_map['p_value']])
 
 # handles difference veteeen filter/nofilter intu files
         if 'DE_drug' in clean_header_map.keys() :
             drug_deg_hits = int(x[clean_header_map['DE_drug']])
         elif 'DE_up_drug' in clean_header_map.keys() and 'DE_down_drug' in clean_header_map.keys() :
-            drug_deg_hits = int(x[clean_header_map['DE_up_drug']]) +  int(x[clean_header_map['DE_down_drug']])
+ #           drug_deg_hits = int(x[clean_header_map['DE_up_drug']]) +  int(x[clean_header_map['DE_down_drug']])
+            if  drug_direction == 'up' :
+                drug_deg_hits = int(x[clean_header_map['DE_down_drug']]) - int(x[clean_header_map['DE_up_drug']])
+            elif drug_direction == 'down' :
+                drug_deg_hits = int(x[clean_header_map['DE_up_drug']]) - int(x[clean_header_map['DE_down_drug']])
+            else :
+                print('Wrong drug_direction lable', drug_direction)
+                assert  False
         else:
             print("Wrong labels in mapping ")
             assert False
 
-        newrecord = (module_id, drug_name, drug_direction, module_size, disease_up, disease_down, drug_deg_in_module, drug_deg_hits)
+        newrecord = (module_id, drug_name, drug_direction, module_size, disease_up, disease_down, drug_deg_in_module, drug_deg_hits, p_val_enrichr)
         # new represetnation with 7 fields remove the pvalues and add the drug name drug direction, use with the record_field_map to index
 
     # check if any module hd both up and down DEG for the disease.relevant for the nofilter case
@@ -205,6 +218,8 @@ def scoreonerecord(record, typescore, weights) :
     drugdirection = record[record_field_map['drug_direction']]
     upcount = record[record_field_map['DEG_up']]
     downcount = record[record_field_map['DEG_down']]
+    p_val_enrichr = record[record_field_map['p_val_enrichr']]
+    drug_deg_hits = record[record_field_map['drug_deg_hits']]
 
     if typescore == 'deg_in_module' :
 #        drug_in_modue = record[6]
@@ -216,7 +231,7 @@ def scoreonerecord(record, typescore, weights) :
         print ("wrong typescore ", typescore)
         assert False
 
-    if weights not in ["size_x_deltadeg", "deltadeg"] :
+    if weights not in ["size_x_deltadeg", "deltadeg", "pval_x_deltadeg", "pval_x_log_deltadeg", 'pval_x_drug_hits', 'pval_x_deltadeg_x_drug_hits'] :
         print ("Wrong weights ", weights)
         assert False
 
@@ -225,13 +240,41 @@ def scoreonerecord(record, typescore, weights) :
     if     drugdirection == 'down':
         if weights== "size_x_deltadeg":
             sc =  drug_in_modue * (upcount - downcount)
+        elif weights== "pval_x_deltadeg" :
+            sc= minuslog10(p_val_enrichr) * (upcount - downcount)
+        elif weights==  "pval_x_log_deltadeg" :
+            sc = minuslog10(p_val_enrichr) *signedlog10(upcount - downcount)
+        elif weights==  "pval_x_drug_hits" :
+            sc = minuslog10(p_val_enrichr) * drug_deg_hits
+        elif weights == 'pval_x_deltadeg_x_drug_hits' :
+            if  upcount - downcount > 0 and drug_deg_hits > 0 :
+                sc = minuslog10(p_val_enrichr) * (upcount - downcount)*drug_deg_hits
+            elif upcount - downcount < 0 and drug_deg_hits < 0 :
+                sc = minuslog10(p_val_enrichr) * (upcount - downcount)*abs(drug_deg_hits)
+            else:
+                sc = 0        
         else :
             sc = upcount - downcount
+
     elif   drugdirection == 'up':
         if weights== "size_x_deltadeg":
             sc = drug_in_modue * (downcount -  upcount)
+        elif weights== "pval_x_deltadeg" :
+             sc =  minuslog10(p_val_enrichr) *(downcount -  upcount)
+        elif weights==  "pval_x_log_deltadeg" :
+             sc = minuslog10(p_val_enrichr) *signedlog10(downcount -  upcount)
+        elif weights==  "pval_x_drug_hits" :
+            sc = minuslog10(p_val_enrichr) * drug_deg_hits
+        elif weights == 'pval_x_deltadeg_x_drug_hits' :
+            if  downcount -  upcount > 0 and drug_deg_hits > 0 :
+                sc = minuslog10(p_val_enrichr) * (downcount -  upcount)*drug_deg_hits
+            elif downcount -  upcount < 0 and drug_deg_hits < 0 :
+                sc = minuslog10(p_val_enrichr) * (downcount -  upcount)*abs(drug_deg_hits)
+            else:
+                sc = 0       
         else :
             sc = downcount -  upcount
+
     else :
         print ("format error ", record)
         assert False
@@ -282,15 +325,18 @@ if __name__ == "__main__":
             drug_format = conf[2]
             positiveonly = True #per ora  usato
             fdaonly = True  #per ora  usato
+            pvalue_filter =True
+            p_value_limit = 0.01
     #        weights = "deltadeg"
-            weights = "size_x_deltadeg"
+     #       weights = "size_x_deltadeg"
+            weights = "pval_x_deltadeg"
             
             
 
     #        if not filename.endswith('noFiltering.csv') and not filename.endswith('noF.csv'):
             if conf[3] in ['filter', 'nofilter']  :
                 counter +=1
-                result_accumulator = direction_analysis(directory, filename, separator, drug_format, positiveonly,  fdaonly ,weights)
+                result_accumulator = direction_analysis(directory, filename, separator, drug_format, positiveonly,  fdaonly , pvalue_filter, p_value_limit , weights)
             else :
                 print('No code for this file format yet', filename)
             print('--------------------------- End --------------------------------')

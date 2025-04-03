@@ -33,12 +33,12 @@ list5 = dict([('a',1), ('b',2),('d',4),('e',5), ('f',6)])
 mylistoflists = (list1, list2, list3, list4, list5)
 
 
-def mapmin(inmap) :
+def mapmin(inmap, def_value=None) :
 
     if len(inmap.keys()) == 0 :
-        return None
+        return def_value
     first = True
-    outval = None
+    outval = def_value
     for x in inmap.keys() :
         if first :
             outval = inmap[x]
@@ -47,12 +47,12 @@ def mapmin(inmap) :
            outval = min(outval, inmap[x])
     return outval
 
-def mapmax(inmap) :
+def mapmax(inmap, def_value=None) :
 
     if len(inmap.keys()) == 0 :
-        return None
+        return def_value
     first = True
-    outval = None
+    outval = def_value
     for x in inmap.keys() :
         if first :
             outval = inmap[x]
@@ -95,9 +95,13 @@ def multimergeranking(listoflists, verbose='noverbose'):
             meanvalue = val/float(num)
             if verbose=='verbose' :
                 print (x, num, val, meanvalue)
+        else :
+             meanvalue = 0.0
         for y in range(len(listoflists)) :
             if x not in listoflists[y].keys() :
                 listofdifflsits[y][x] = meanvalue
+            else :
+                listofdifflsits[y][x]= 0.0
                 
                 
     # apply rescaling to listofdifflsits values..
@@ -105,9 +109,9 @@ def multimergeranking(listoflists, verbose='noverbose'):
     scaledlistofdifflsits = [{} for x in range(len(listoflists))]
 
 
-    minvector =  [mapmin(inmap) for inmap in listoflists]
+    minvector =  [mapmin(inmap, 0) for inmap in listoflists]
     print ('minvector ', minvector)
-    maxvector =  [mapmax(inmap) for inmap in listofdifflsits]       
+    maxvector =  [mapmax(inmap, 0) for inmap in listofdifflsits]       
     print ('maxvector ', maxvector)
 
     for x in range(len(scaledlistofdifflsits)) :

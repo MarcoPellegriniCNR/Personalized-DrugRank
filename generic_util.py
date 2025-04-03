@@ -44,8 +44,21 @@ def venndiagramdrugs(strd1, d1, strd2, d2) :
 def minuslog10(y) :
     if y == 0.0 :
         return 1000
+    elif y == 'NA' :
+        return 0
     else :
         return -math.log10(y)
+
+
+def signedlog10(y) :
+    if y == 0.0 :
+        return 0
+    elif y == 'NA' :
+        return 0
+    else :
+        v= math.log10(abs(y))
+        sign = float(y)/abs(float(y))
+        return sign*v
 
 
 ########################################

@@ -102,6 +102,18 @@ def suffixsplit(s1,s2):
 
 # after string nrmalization
 exceptionslist = [
+    ('procaine', 'penicillin_g_procaine'),
+    ('procaine', 'procainamide_hydrochloride'),
+    ('econazole', 'butoconazole_nitrate'),
+    ('pheniramine', 'efidac_24_pseudoephedrine_hydrochloride/brompheniramine_maleate'),
+    ('penicillin_v', 'penicillin_g_potassium'),
+    ('penicillin_v', 'penicillin_g_procaine'),
+   ( '9_amino', 'sodium_aminosalicylate'),
+     ('9_amino', 'potassium_aminosalicylate'),
+    ('tomoxetine_hydrochloride', 'fluoxetine_hydrochloride'),
+    ('pheniramine', 'chlorpheniramine_maleate'),
+    ('aciclovir', 'ganciclovir'),
+    ('procaine', 'dicurin_procaine'),
         ('interferon_beta_1b', 'interferon_beta_1a'),
         ('vitamin_c', 'vitamin_a'),
         ('vitamin_c', 'vitamin_d'),
@@ -626,6 +638,9 @@ exceptionslist = [
 # matches checked on interenet and found ok:
 
 certifiedlist = [
+    ('medroxyprogesterone', 'hydroxyprogesterone_caproate'),
+    ('betamethasone', 'betamethasone_valerate'),
+    ('chloroquine', 'hydroxychloroquine_sulfate'),
     ('dipropionate', 'betamethasone_dipropionate'),
     ('erythro', 'erythrocin'),
     ('vitamin_d2', 'vitamin_d'),
@@ -716,6 +731,7 @@ certifiedlist = [
         ('propranolol', 'propranolol_hydrochloride_intensol'),
         ('doxorubicin', 'doxorubicin_hydrochloride'),
         ('irinotecan', 'irinotecan_hydrochloride'),
+        ('irinotecan', 'irinotecan_hydrochloride_trihydrate'),
         ('quetiapine', 'quetiapine_fumarate'),
         ('vitamin_d3', 'vitamin_d'),
         ('oxacillin', 'oxacillin_sodium'),

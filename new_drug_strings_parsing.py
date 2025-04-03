@@ -152,8 +152,11 @@ if __name__ == "__main__":
 
 #    patient_list = ['pilot', ]
 #    patient_list = ['TCGA-AZ-6600', ]
-    patient_list = ['TCGA-HC-7742']
-    alg_list = ['cpd07j08', 'MD' ]
+#    patient_list = ['TCGA-HC-7742']
+#    patient_list = ['TCGA-A6-2671']
+    patient_list = ['TCGA-AZ-6605',]
+    alg_list = ['cpd07j08', 'MD' , 'KPM', 'Degas', 'clex3800' ]
+    data_list = [ 'GEO', 'DM']
 
 ##    drugs_to_check = [  'Fluorouracil',
 ##                        'Leucovorin',
@@ -167,12 +170,15 @@ if __name__ == "__main__":
 ##    
 ##    drugs_to_check_lable = 'crc_most_used_drugs'
 
-    drugs_to_check = ['Leuprolide', 'Leuprorelin', 'Lupron', 'Eligard', 'Fensolvi', 'Viadur', 'Lupaneta' ]
-    drugs_to_check_lable = 'prc_drug_used_for_TCGA-HC-7742'
+##    drugs_to_check = ['Leuprolide', 'Leuprorelin', 'Lupron', 'Eligard', 'Fensolvi', 'Viadur', 'Lupaneta' ]
+##    drugs_to_check_lable = 'prc_drug_used_for_TCGA-HC-7742'
     
+    drugs_to_check = ['Conatumumab', 'Leucovorin', 'Fluorouracil', 'Bevacizumab', 'Oxaliplatin']
+    drugs_to_check_lable = 'crc_drug_used_for_TCGA-A6-2671'
+
 
     for conf in modulation_data.keys() :
-        if conf[0] in patient_list and  conf[1] in alg_list :
+        if conf[0] in patient_list and  conf[1] in alg_list  and conf[2] in data_list :
             print('--------------------------- Begin --------------------------------')
             print(conf, modulation_data[conf])
             directory = modulation_data[conf][0]

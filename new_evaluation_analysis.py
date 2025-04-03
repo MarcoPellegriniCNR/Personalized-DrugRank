@@ -7,7 +7,7 @@
 ################################################
 # main mapping parameter to location
 
-from new_mapping_modulation_data import modulation_data
+from new_mapping_modulation_data import modulation_data, drugs_to_check, drugs_to_check_lable
 
 ################################################
 # laoding form fiel routines
@@ -22,17 +22,54 @@ from new_directionality_analysis import direction_analysis
 #####################################
 # importing TTD data
 
-from random_drug_scoring_model import  filterbycolorectcandata, filterbyprostcandata, compute_zscores_pval
+from random_drug_scoring_model import  filterbycolorectcandata, filterbyprostcandata, compute_zscores_pval, filter_two_lists
 
 #############################
 # functions for rank merging
 
 from testingrra import multimergeranking
 
+################
+# functions for name analysis
+
+from new_drug_strings_parsing import extract_drug_name_direction
+
 #####################
 # generic function
 
-from generic_util import printlist
+from generic_util import printlist, increment_count, printmap
+
+####################
+# extract list of drugs from file.
+
+def extract_drug_names_from_file(conf, verbose = 'noverbose'):
+
+    separator = ','
+
+    if not conf in modulation_data.keys() :
+        print('Wrong configuration in extract_drug_names_from_file : {}'.format(conf))
+        assert False
+    directory = modulation_data[conf][0]
+    filename = modulation_data[conf][1]
+    drug_format = conf[2]
+
+    result_accumulator, _ = load_data (directory, filename, separator)
+
+    unique_drugs = {}
+    for x in result_accumulator :
+        result =  extract_drug_name_direction(x[1], drug_format)
+    #   print(result)
+        increment_count(unique_drugs, result[0], 1)
+
+    drug_names_in_matrix = [y for y in  unique_drugs.keys()]
+    if verbose == 'verbose' :
+        printmap(unique_drugs, 'unique_drugs')
+    return  drug_names_in_matrix
+
+
+    
+    
+
 
 
 ###########################
@@ -85,12 +122,30 @@ def compute_performance_simplified(initiallist, trialdruglist, conf, fdafilterfl
                 print (x,  drugname, "no trial/TTD_Data ")
             rankedlist.append((x,  drugname, "no trial "))
 
-    print ("suminvrserank (RHR), prec-at-20 : ", conf, suminvrserank, precisionat20)
+    print ("@@ suminvrserank (RHR), prec-at-20 : ", conf, suminvrserank, precisionat20)
     ((z_prec,p_prec),(z_rhr,p_rhr)) = compute_zscores_pval(conf[2], conf[4], fdafilterflag , precisionat20, suminvrserank)
-    print( 'P_value_precision : {}, p_value_rhr : {}'.format(p_prec, p_rhr) )
+    print( '@@ P_value_precision : {}, p_value_rhr : {}'.format(p_prec, p_rhr) )
     
     return (conf , suminvrserank, precisionat20, accum, rankedlist)
 
+
+##################################################################
+# check fro specific drugs in a lsting
+
+def check_specific_drugs(initial_rank_list, target_list, drug_format):
+
+    print('Iniltal list size {}, target list size {}'.format(len(initial_rank_list), len(target_list)))
+          
+    if len(initial_rank_list) == 0 or  len(target_list) == 0 :
+        return []
+
+    for x in range(len(initial_rank_list)):
+        drugname = initial_rank_list[x][0] # drug name in first postion in the record                    
+        if drugname in target_list :
+            print('@@ For {} Drug {}, in position {} on total of {}'.format(drug_format, drugname, x, len(initial_rank_list)))
+
+    return []
+        
 
 
 #####################################################
@@ -104,14 +159,20 @@ if __name__ == "__main__":
     separator = ','
     counter = 1
     counter_test_limit = 16
-    with_merge_step = True
+#    with_merge_step = True
+    with_merge_step = False
+
 
 #    patient_list = ['pilot', ]
     patient_list = ['TCGA-AZ-6600', ]
-#    patient_list = ['TCGA-HC-7742']
+#    patient_list = ['TCGA-HC-7742',]
+#    patient_list = ['TCGA-A6-2671',]
+#    patient_list = ['TCGA-AA-3517',]
+#    patient_list = ['TCGA-AZ-6605',]
+#    patient_list = ['TCGA-A6-5667',]
     alg_list = ['cpd07j08', 'MD' ]
 
-    
+    print('Paremetrs: counter_test_limit {}, with_merge_step {}, patient_list {}, alg_list {} '.format(counter_test_limit, with_merge_step, patient_list, alg_list))
     collect_results_map = {}
     for conf in modulation_data.keys() :
         if conf[0] in patient_list  and  conf[1] in alg_list :
@@ -120,18 +181,40 @@ if __name__ == "__main__":
             directory = modulation_data[conf][0]
             filename = modulation_data[conf][1]
             drug_format = conf[2]
+            filtertype = conf[3]
             positiveonly = True #per ora  usato
             fdaonly = True  #per ora  usato
-    #        weights = "deltadeg"
-            weights = "size_x_deltadeg"
-            
+            pvalue_filter = True
+            p_value_limit = 0.01
+#            positiveonly = False #per ora  usato
+#            fdaonly = False  #per ora  usato
+
+#            weights = "deltadeg"
+#            weights = "size_x_deltadeg"
+#            weights = "pval_x_deltadeg"
+#            weights = "pval_x_log_deltadeg"
+#            weights = 'pval_x_drug_hits'
+            weights = 'pval_x_deltadeg_x_drug_hits'
+
+            print('Paremetrs: positiveonly {}, fdaonly {}, weights {}, pvalue_filter {},  p_value_limit {} '.format(positiveonly, fdaonly, weights, pvalue_filter, p_value_limit ))
             
 
     #        if not filename.endswith('noFiltering.csv') and not filename.endswith('noF.csv'):
             if conf[3] in ['filter', 'nofilter']  :
                 counter +=1
-                result_accumulator = direction_analysis(directory, filename, separator, drug_format, positiveonly,  fdaonly ,weights)
+                result_accumulator = direction_analysis(directory, filename, separator, drug_format, positiveonly,  fdaonly ,pvalue_filter, p_value_limit, weights)
                 new_ranking_evaluation_via_TTD_data(conf, result_accumulator, fdaonly)
+
+    # check if therapy drigs dta is available form apient and in teh matrix
+                if conf[0] not in drugs_to_check.keys() :
+                    print('No drugs_to_check for {}'.format(conf[0]))
+                elif drugs_to_check[conf[0]] == [] :
+                     print('No drugs_to_check for {}'.format(conf[0]))
+                else :
+                    drug_names_in_matrix = extract_drug_names_from_file(conf, verbose = 'noverbose')
+                    target_drugs = filter_two_lists(drugs_to_check_lable[conf[0]], drugs_to_check[conf[0]], filename, drug_names_in_matrix )                    
+                    check_specific_drugs(result_accumulator, target_drugs, drug_format)
+                
                 collect_results_map[conf] = result_accumulator
             else :
                 print('No code for this file format yet', filename)
