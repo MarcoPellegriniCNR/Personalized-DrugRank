@@ -1,2 +1,2 @@
 
-This folder includes the differentially expressed genes for each patient in the CRC irinotecan cohort. These can be obtained for each of the cohorts by using script_patient_DEGs.R, since, due to size limitations, it is not possible to upload them all here.
+This folder includes the differentially expressed genes for each patient in the CRC irinotecan cohort. Due to size limitations, the DEGs for each cohort could not be included, but can be obtained using script_patient_DEGs.R.
